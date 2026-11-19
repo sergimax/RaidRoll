@@ -394,7 +394,7 @@ function RR_MouseOverTooltip(ID)
 	if ID ~= nil then
 		if string.find(ID, "Raid_Roll_SetSymbol") then
 		
-		CharID = tonumber(string.sub(ID,20))
+		CharID = tonumber(string.sub(ID,20)) + (RR_ScrollOffset or 0)
 		
 		if RaidRoll_DB["debug"] == true then
 			RR_Test(ID)
@@ -546,50 +546,26 @@ function RR_ClearAllData_Startup()
   
 end
 
-function RaidRoll_Window_Scroll(direction)
-
--- Debugging, shows the direction and value
-if RaidRoll_DB["debug"] == true then RR_Test(direction) end
-if RaidRoll_DB["debug"] == true then RR_Test(RaidRoll_Slider:GetValue()) end
-
--- Dont scroll unless a maxplayers value exists
-	if MaxPlayers[rr_CurrentRollID] ~= nil then
-		if MaxPlayers[rr_CurrentRollID] >= 5 then
-			RaidRoll_MaxNumber = MaxPlayers[rr_CurrentRollID]-4
-		--else
-			--RaidRoll_MaxNumber = 1
-		--end
-			
-			RaidRoll_MaxNumber_Slider = RaidRoll_MaxNumber
-			
-			if rr_CurrentRollID > 0 and RaidRoll_MaxNumber > 1 then RaidRoll_MaxNumber_Slider = RaidRoll_MaxNumber - 1 end
-			
-			RaidRoll_Slider:SetMinMaxValues(1, RaidRoll_MaxNumber_Slider)
-			
-			
-			RaidRoll_Slider:SetValue(RaidRoll_Slider:GetValue() - (direction * 3))
-			
-			if RaidRoll_Slider:GetValue() > RaidRoll_MaxNumber then
-				RaidRoll_Slider:SetValue(RaidRoll_MaxNumber)
-			end
-			
-			RR_ScrollOffset = RaidRoll_Slider:GetValue() - 1
-			
-			--for i=1, 5 do
-				--if InviteHelper_Position[i+RaidRoll_Slider:GetValue()] ~= nil then
-				--	_G["InviteHelper_GMButton_name" .. i]:SetText(i+RaidRoll_Slider:GetValue() - 1 .. ": " .. RaidRoll_Position[i+RaidRoll_Slider:GetValue()])		
-				--else
-				--	_G["InviteHelper_GMButton_name" .. i]:SetText("")	
-				--end
-			--end
-			
-		 --RaidRoll_Slider.tooltipText = RaidRoll_Slider:GetValue() .. " - " .. RaidRoll_Slider:GetValue() + 4
-		 
-			RR_Display(rr_CurrentRollID)
-			
-			
-		end
+-- Keep the slider and the visible page in sync, including after changing row count.
+function RR_UpdateScrollRange(displayID)
+	if not RaidRoll_Slider then return end
+	local count = MaxPlayers[displayID] or 0
+	-- Item rolls include an empty entry created when the roll starts.
+	if displayID > 0 then count = math.max(0, count - 1) end
+	local maximum = math.max(1, count - RR_GetVisibleRows() + 1)
+	RR_ScrollOffset = math.max(0, math.min(RR_ScrollOffset or 0, maximum - 1))
+	RR_UpdatingScrollRange = true
+	RaidRoll_Slider:SetMinMaxValues(1, maximum)
+	if RaidRoll_Slider:GetValue() ~= RR_ScrollOffset + 1 then
+		RaidRoll_Slider:SetValue(RR_ScrollOffset + 1)
 	end
+	RR_UpdatingScrollRange = false
+end
+
+function RaidRoll_Window_Scroll(direction)
+	if RR_UpdatingScrollRange then return end
+	RR_ScrollOffset = RaidRoll_Slider:GetValue() - 1 - (direction * 3)
+	RR_Display(rr_CurrentRollID)
 end
 
 -- TOGGLE THE OPTIONS MENU
@@ -935,12 +911,7 @@ local High = tonumber(High)
 	end
 	
 -- update scrollbar
-	if MaxPlayers[rr_CurrentRollID] and MaxPlayers[rr_CurrentRollID] >= 5 then
-		RaidRoll_MaxNumber = MaxPlayers[rr_CurrentRollID]-4
-		RaidRoll_MaxNumber_Slider = RaidRoll_MaxNumber
-		if rr_CurrentRollID > 0 and RaidRoll_MaxNumber > 1 then RaidRoll_MaxNumber_Slider = RaidRoll_MaxNumber - 1 end
-		RaidRoll_Slider:SetMinMaxValues(1, RaidRoll_MaxNumber_Slider)
-	end
+	RR_UpdateScrollRange(rr_CurrentRollID)
 	
 end
 
@@ -1079,6 +1050,17 @@ end
 -- rr_AddedPlayer = if we added a player this is true, otherwise it is false (for re-sorting)
 
 
+function RR_ToggleRollMode()
+	local settings = RaidRoll_DBPC[UnitName("player")]
+	settings["RR_EPGP_Enabled"] = not settings["RR_EPGP_Enabled"]
+	RR_RollCheckBox_EPGPMode_panel:SetChecked(settings["RR_EPGP_Enabled"])
+	RR_ScrollOffset = 0
+	for rollID in pairs(MaxPlayers) do
+		rr_RollSort(rollID)
+	end
+	RR_Display(rr_CurrentRollID)
+end
+
 function rr_RollSort(rr_rollID,PlayerRoll,PlayerName,rr_AddedPlayer,rr_FirstRoll,RR_LegitRoll,LowHigh)
 
 
@@ -1086,6 +1068,8 @@ function rr_RollSort(rr_rollID,PlayerRoll,PlayerName,rr_AddedPlayer,rr_FirstRoll
 		
 
 local temp
+-- Startup has no roll data yet; only sort lists initialized by adding a roll.
+local MaxPlayersValue = MaxPlayers[rr_rollID] and math.max(5, MaxPlayers[rr_rollID])
 
 --if rr_rollID == nil then rr_rollID = rr_CurrentRollID end 
 
@@ -1267,7 +1251,18 @@ local temp
 			RR_RollData[rr_rollID][MaxPlayersValue]["LowHigh"] = LowHigh
 			RR_RollData[rr_rollID][MaxPlayersValue]["EPGPValues"] = "EP: "..EP.." GP: "..GP
 			
-			
+			--CODE CHANGED DRKNEZSZ
+			if RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Enabled"] == true then
+				if PlayerName ~= "" then
+					local message = PlayerName.." has Prio: ".. PR;
+					if GetNumRaidMembers() ~= 0 then
+						SendChatMessage(message, "Raid"); 
+					else
+						SendChatMessage(message, "Party"); 
+					end
+				end
+			end
+			--END OF CODE CHANGED
 			
 		-- Default rank and rank id values (will be overwritten if the person is in the guild
 			RollerRank[rr_rollID][MaxPlayersValue] = ""
@@ -1710,12 +1705,38 @@ function RR_FindWinner(rollID)
 end
 
 
+-- Display settings are independent of the mode used to sort and choose a winner.
+function RR_GetRollColumnHeader()
+	local settings = RaidRoll_DBPC[UnitName("player")]
+	if settings["RR_Show_Roll_EPGP"] == true then return "PR / Roll" end
+	return settings["RR_EPGP_Enabled"] == true and "PR" or "Roll"
+end
+
+function RR_GetRollColumnText(rollID, index, color)
+	if RollerRoll[rollID][index] == 0 then return "" end
+	local settings = RaidRoll_DBPC[UnitName("player")]
+	local rollText = tostring(RollerRoll[rollID][index])
+	if RaidRoll_LegitRoll[rollID][index] ~= true then rollText = rollText .. "*" end
+	if RollerFirst[rollID][index] ~= true then
+		rollText = "(" .. Roll_Number[rollID][index] .. ") " .. rollText
+	end
+	local prColor = RR_EPGPAboveThreshold[rollID][index] == true and "|cFFABD473" or "|cFFC41F3B"
+	local prText = prColor .. RR_EPGP_PRValue[rollID][index]
+	if settings["RR_Show_Roll_EPGP"] == true then
+		return prText .. "|r / " .. color .. rollText .. "|r"
+	end
+	if settings["RR_EPGP_Enabled"] == true then return prText end
+	return color .. rollText
+end
+
 function RR_Display(RR_DisplayID)
 
 
 RR_HasDisplayedAlready = true
 
 l_RR_DisplayID = RR_DisplayID
+
+	RR_UpdateScrollRange(RR_DisplayID)
 
 	if RollerGroup[l_RR_DisplayID] == nil then RollerGroup[l_RR_DisplayID] = {} end
 
@@ -1728,7 +1749,7 @@ l_RR_DisplayID = RR_DisplayID
 	end
 	
 	if RollerFirst[RR_DisplayID] ~= nil and RollerFirst[RR_DisplayID][1] ~= nil then
-		for i=1,5 do
+		for i=1,RR_GetVisibleRows() do
 			
 			--To make sure these are not nil values
 			mark = ""
@@ -1736,6 +1757,11 @@ l_RR_DisplayID = RR_DisplayID
 			
 			_G["RR_RollerPos"..i]:SetText(i + RR_ScrollOffset .. ":")
 			
+			if not RollerName[RR_DisplayID][i+RR_ScrollOffset] or RollerName[RR_DisplayID][i+RR_ScrollOffset] == "" then
+				for _, prefix in ipairs({"RR_Roller", "RR_Rolled", "Raid_Roll_Rank_String", "RR_Group"}) do
+					_G[prefix..i]:SetText("")
+				end
+			else
 			if RollerFirst[RR_DisplayID][i+RR_ScrollOffset] == false then
 				color = "|cFF11aacc"
 			else
@@ -1799,36 +1825,8 @@ l_RR_DisplayID = RR_DisplayID
 					_G["RR_Roller"..i]:SetText(color .. mark ..  RollerName[RR_DisplayID][i+RR_ScrollOffset])
 				end
 				
-				if RollerRoll[RR_DisplayID][i+RR_ScrollOffset] == 0 then
-					_G["RR_Rolled"..i]:SetText("")
-				else
-					if RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Enabled"] == true then
-						-- Display epgp values instead of rolls
-						RR_Rolled:SetText("PR")
-						if RR_EPGPAboveThreshold[RR_DisplayID][i+RR_ScrollOffset] ~= true then
-							_G["RR_Rolled"..i]:SetText("|cFFC41F3B" .. RR_EPGP_PRValue[RR_DisplayID][i+RR_ScrollOffset])	-- not above threshold (red)
-						else
-							_G["RR_Rolled"..i]:SetText("|cFFABD473" .. RR_EPGP_PRValue[RR_DisplayID][i+RR_ScrollOffset])	-- above threshold (green)
-						end
-					else
-						RR_Rolled:SetText("Roll")
-						if RaidRoll_LegitRoll[RR_DisplayID][i+RR_ScrollOffset] == true then
-							ExtraChar = ""
-						else
-							ExtraChar = "*"
-						end
-						
-						
-						
-						if RollerFirst[RR_DisplayID][i+RR_ScrollOffset] == true then
-							_G["RR_Rolled"..i]:SetText(color .. RollerRoll[RR_DisplayID][i+RR_ScrollOffset] .. ExtraChar)
-						else
-							_G["RR_Rolled"..i]:SetText(color .. "(" .. Roll_Number[RR_DisplayID][i+RR_ScrollOffset] .. ") " .. RollerRoll[RR_DisplayID][i+RR_ScrollOffset] .. ExtraChar)
-						end
-					end
-				end
-				
-				
+				_G["RR_Rolled"..i]:SetText(RR_GetRollColumnText(RR_DisplayID, i+RR_ScrollOffset, color))
+
 				if RollerRankIndex[RR_DisplayID][i+RR_ScrollOffset] == 99 then
 					_G["Raid_Roll_Rank_String"..i]:SetText("")
 				else
@@ -1849,8 +1847,12 @@ l_RR_DisplayID = RR_DisplayID
 				if RollerGroup[RR_DisplayID][i+RR_ScrollOffset] == nil then RollerGroup[RR_DisplayID][i+RR_ScrollOffset] = "" end
 				_G["RR_Group"..i]:SetText(color .. RollerGroup[RR_DisplayID][i+RR_ScrollOffset])
 			end
+			end
 		end
 	end
+
+	RR_Rolled:SetText(RR_GetRollColumnHeader())
+	RR_RollFrame_SortOutSize()
 
 	-- This controls the showing of the window (true = show window, false = dont show window)
 		if RaidRoll_DBPC[UnitName("player")]["RR_Roll_Tracking_Enabled"] == true then
@@ -2619,7 +2621,7 @@ function RaidRoll_CheckButton_Update()
 		RR_Display(rr_CurrentRollID)
 	end
 	
-	for i=1,5 do
+	for i=1,10 do
 		_G["Raid_Roll_Rank_String"..i]:SetWidth(65+RaidRoll_DBPC[UnitName("player")]["RR_ExtraWidth"]); 
 	end
 	
@@ -2902,6 +2904,16 @@ function RR_SetupVariables()
 		RaidRoll_DBPC[UnitName("player")]["RR_RollCheckBox_Enable_Alt_Mode"] = true
 		RR_RollCheckBox_Enable_Alt_Mode:SetChecked(true)
 	end
+
+	if RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"] == nil then
+		RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"] = false
+	end
+	RR_RollCheckBox_Show_Roll_EPGP:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"])
+
+	if RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] == nil then
+		RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] = true
+	end
+	RR_RollCheckBox_ShowTenPlayers:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"])
 
 	
 	

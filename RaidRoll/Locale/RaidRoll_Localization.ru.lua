@@ -1,6 +1,12 @@
 ﻿
 
 if (GetLocale() == "ruRU") then
+RAIDROLL_LOCALE["RR_RollModeButton"] = "Переключить разролл между EPGP и обычным броском.\nНа кнопке указан текущий режим.\nМеняет сортировку игроков и выбор победителя."
+RAIDROLL_LOCALE["Show_Ten_Players"] = "Показывать 10 игроков"
+RAIDROLL_LOCALE["RR_RollCheckBox_ShowTenPlayers"] = "Показывать 10 игроков в окне разролла.\nВыключите, чтобы показывать 5 игроков."
+
+RAIDROLL_LOCALE["Show_Roll_EPGP"] = "Показывать PR и /roll"
+RAIDROLL_LOCALE["RR_RollCheckBox_Show_Roll_EPGP"] = "Показывать PR и результат броска в режимах EPGP и Roll.\nЕсли выключено: в EPGP показывается PR, в Roll — бросок.\nНе меняет сортировку и выбор победителя."
 
 RAIDROLL_LOCALE["10_Sec_Announce_Winner"] = "10 сек + Анонс победителя"
 RAIDROLL_LOCALE["added_to_marking_list"] = "добавлена метка в список."
@@ -30,9 +36,9 @@ RAIDROLL_LOCALE["Clear"] = "Очистить"
 RAIDROLL_LOCALE["Clear_Marks"] = "Очистить метки"
 RAIDROLL_LOCALE["Clear_Rolls"] = "Очистить броски"
 -- RAIDROLL_LOCALE["Displaying_Loots_for"] = ""
--- RAIDROLL_LOCALE["Enable_Alt_Mode"] = ""
-RAIDROLL_LOCALE["Enable_EPGP_mode"] = "Включить EPGP мод"
-RAIDROLL_LOCALE["Enable_threshold_levels"] = "Включение порогового уровня"
+RAIDROLL_LOCALE["Enable_Alt_Mode"] = "PR основного персонажа для альтов"
+RAIDROLL_LOCALE["Enable_EPGP_mode"] = "Разролл по EPGP (с выводом в чат)"
+RAIDROLL_LOCALE["Enable_threshold_levels"] = "Учитывать порог EP"
 -- RAIDROLL_LOCALE["Everyone_is_here"] = ""
 RAIDROLL_LOCALE["Finish_Early"] = "Закончить досрочно"
 RAIDROLL_LOCALE["Finishing_Rolling_Early"] = "Розыгрыш закончен досрочно"
@@ -63,7 +69,7 @@ RAIDROLL_LOCALE["Marking_list_cleared"] = "Список марок очищен!
 -- RAIDROLL_LOCALE["Mark_Them"] = ""
 -- RAIDROLL_LOCALE["Mob"] = ""
 -- RAIDROLL_LOCALE["Multiroll_by"] = ""
--- RAIDROLL_LOCALE["Multi_Rollers"] = ""
+RAIDROLL_LOCALE["Multi_Rollers"] = "Сообщать о повторных бросках"
 RAIDROLL_LOCALE["New_ID"] = "Новый ID"
 -- RAIDROLL_LOCALE["No"] = ""
 RAIDROLL_LOCALE["No_countdown"] = "Без отсчета"
@@ -72,7 +78,7 @@ RAIDROLL_LOCALE["No_Item"] = "Нет предмета"
 -- RAIDROLL_LOCALE["Not_Sure"] = ""
 RAIDROLL_LOCALE["No_Winner"] = "Нет победителя"
 RAIDROLL_LOCALE["No_winner_for"] = "Никто не выиграл %s."
--- RAIDROLL_LOCALE["Number not required"] = ""
+RAIDROLL_LOCALE["Number not required"] = "Ставки без числа"
 RAIDROLL_LOCALE["Options"] = "Настройки"
 RAIDROLL_LOCALE["OPTIONSTITLE"] = "Настройки меню"
 -- RAIDROLL_LOCALE["Players_28_yd_from_me"] = ""
@@ -86,11 +92,11 @@ RAIDROLL_LOCALE["RaidRollCheckBox_ShowRanks_panel"] = [=[Показать игр
 рядом с его именем.
 
 Рекомендуется: Выкл]=]
-RAIDROLL_LOCALE["Raid_Roll_Display_Settings"] = "Показ настроек"
+RAIDROLL_LOCALE["Raid_Roll_Display_Settings"] = "Настройки отображения"
 RAIDROLL_LOCALE["Raid_Roll_EPGP_Settings"] = "EPGP настройки"
 -- RAIDROLL_LOCALE["Raid_Rolling"] = ""
 -- RAIDROLL_LOCALE["Raid_Rolling_for"] = ""
--- RAIDROLL_LOCALE["Raid_Roll_Misc_Settings"] = ""
+RAIDROLL_LOCALE["Raid_Roll_Misc_Settings"] = "Прочие настройки"
 RAIDROLL_LOCALE["Receive_loot_messages_from_guild"] = "Получиние сообщений о добыче из гильдии. (Рекомендуется выкл)"
 RAIDROLL_LOCALE["removed_from_marking_list"] = "очистить список марок."
 -- RAIDROLL_LOCALE["Re_Rolling"] = ""
@@ -114,9 +120,9 @@ RAIDROLL_LOCALE["RR_RollCheckBox_Auto_Close"] = [=[Автоматически з
 после отдачи добычи победителю/игроку.
 
 Рекомендуем: Выкл]=] -- Needs review
--- RAIDROLL_LOCALE["RR_RollCheckBox_Enable_Alt_Mode"] = ""
--- RAIDROLL_LOCALE["RR_RollCheckBox_EPGPMode_panel"] = ""
--- RAIDROLL_LOCALE["RR_RollCheckBox_EPGPThreshold_panel"] = ""
+RAIDROLL_LOCALE["RR_RollCheckBox_Enable_Alt_Mode"] = "Использовать PR основного персонажа для альта.\nИмя основного персонажа берётся из офицерской заметки альта.\nТребуется расширение RaidRoll_EPGP."
+RAIDROLL_LOCALE["RR_RollCheckBox_EPGPMode_panel"] = "Сортировать игроков и выбирать победителя по приоритету EPGP.\nЕсли выключено — по обычному броску.\nСвязано с кнопкой by PR / by Roll в окне разролла."
+RAIDROLL_LOCALE["RR_RollCheckBox_EPGPThreshold_panel"] = "В режиме EPGP отдавать приоритет игрокам,\nчей EP не ниже минимума гильдии.\nВ режиме обычного броска не применяется."
 RAIDROLL_LOCALE["RR_RollCheckBox_GuildAnnounce"] = [=[Оповещать о победителе в канал гильдии.
 (оповещается также и рейд)
 
@@ -140,21 +146,21 @@ RAIDROLL_LOCALE["RR_RollCheckBox_ShowGroupNumber_panel"] = [=[Показать �
 
 Рекомендуется: Выкл]=]
 -- RAIDROLL_LOCALE["RR_RollCheckBox_Track_Bids"] = ""
--- RAIDROLL_LOCALE["RR_RollCheckBox_Track_EPGPSays"] = ""
+RAIDROLL_LOCALE["RR_RollCheckBox_Track_EPGPSays"] = "Добавлять игрока в список разролла по сообщению !epgp\nв чате или личных сообщениях.\nЗаявке присваивается значение броска 1 из 100."
 -- RAIDROLL_LOCALE["RR_RollCheckBox_Unannounced_panel"] = ""
 -- RAIDROLL_LOCALE["RR_Roll_RollButton"] = ""
 -- RAIDROLL_LOCALE["RR_WotLK_Dung_Only"] = ""
-RAIDROLL_LOCALE["Set_Extra_Rank_Width"] = "Добавить ширину ранга"
+RAIDROLL_LOCALE["Set_Extra_Rank_Width"] = "Доп. ширина ранга"
 RAIDROLL_LOCALE["Set_Msg1"] = "Назначить первое сообщение"
 RAIDROLL_LOCALE["Set_Msg2"] = "Назначить второе сообщение"
 -- RAIDROLL_LOCALE["Set_Msg3"] = ""
-RAIDROLL_LOCALE["Set_Rolling_Time"] = "Время розыгрыша"
-RAIDROLL_LOCALE["Set_Scale"] = "Размер окна отслеживания бросков"
+RAIDROLL_LOCALE["Set_Rolling_Time"] = "Время разролла, сек."
+RAIDROLL_LOCALE["Set_Scale"] = "Масштаб окна разролла"
 RAIDROLL_LOCALE["Show_Class_Colors"] = "Показать цвета классов"
 RAIDROLL_LOCALE["Show_Group_Beside_Name"] = "Показать номер групп"
 RAIDROLL_LOCALE["Show_Rank_Beside_Name"] = "Показать ранг рядом с ником"
--- RAIDROLL_LOCALE["Track_Bids"] = ""
--- RAIDROLL_LOCALE["Track_EPGPSays"] = ""
+RAIDROLL_LOCALE["Track_Bids"] = "Принимать ставки !bid"
+RAIDROLL_LOCALE["Track_EPGPSays"] = "Принимать заявки !epgp"
 RAIDROLL_LOCALE["Use_Item_Brackets"] = "Для оповещения с сылкой на предмет используйте [item]  (пример: Разыгрывается [item] на основной спек)"
 RAIDROLL_LOCALE["Use_officer_channel"] = "Исп. канал офицеров"
 -- RAIDROLL_LOCALE["Wins"] = ""

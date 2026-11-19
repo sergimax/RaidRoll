@@ -2,15 +2,12 @@
 
 function RR_GetEPGPGuildData()
 
-
-
-
 	if RaidRoll_DB["EPGP"] == nil then RaidRoll_DB["EPGP"] = {} end
 -- Setting up default Values
-	RaidRoll_DB["DECAY_P"]  = 0		-- The decay (in %)
-	RaidRoll_DB["EXTRAS_P"] = 0		-- Standby EPGP
-	RaidRoll_DB["MIN_EP"]   = 2500		-- Min ep req to be eligable for loot
-	RaidRoll_DB["BASE_GP"]  = 100		-- GP value you start with
+	if RaidRoll_DB["DECAY_P"] == nil then RaidRoll_DB["DECAY_P"]  = 0	end	-- The decay (in %)
+	if RaidRoll_DB["EXTRAS_P"] == nil then RaidRoll_DB["EXTRAS_P"] = 0	end	-- Standby EPGP
+	if RaidRoll_DB["MIN_EP"] == nil then RaidRoll_DB["MIN_EP"]   = 2500 end		-- Min ep req to be eligable for loot
+	if RaidRoll_DB["BASE_GP"] == nil then RaidRoll_DB["BASE_GP"]  = 1	end	-- GP value you start with
 	
 	
 	if RR_EPGPHasLoaded == true then

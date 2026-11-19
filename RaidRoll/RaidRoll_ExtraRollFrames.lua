@@ -1,20 +1,52 @@
 
 
+function RR_GetVisibleRows()
+	local settings = RaidRoll_DBPC[UnitName("player")]
+	return settings and settings["RR_ShowTenPlayers"] == true and 10 or 5
+end
+
 function RR_RollFrame_SortOutSize()
-	RR_RollFrame:SetHeight(155)
-	
-	if RR_RollCheckBox_ShowRanks_panel ~= nil then
-		if  RR_RollCheckBox_ShowRanks_panel:GetChecked() then
-			RR_RollFrame:SetWidth(265+RaidRoll_DBPC[UnitName("player")]["RR_ExtraWidth"])
-		else
-			RR_RollFrame:SetWidth(215+RaidRoll_DBPC[UnitName("player")]["RR_ExtraWidth"])
+	local visibleRows = RR_GetVisibleRows()
+	RR_RollFrame:SetHeight(155 + (visibleRows - 5) * 12)
+	if RaidRoll_Slider then RaidRoll_Slider:SetHeight(RR_RollFrame:GetHeight() - 75) end
+	local settings = RaidRoll_DBPC[UnitName("player")]
+	for i=1,10 do
+		for _, prefix in ipairs({"RR_RollerPos", "RR_Roller", "RR_Rolled", "RR_Group", "Raid_Roll_Rank_String", "Raid_Roll_SetSymbol"}) do
+			local row = _G[prefix..i]
+			if row then
+				if i <= visibleRows and (prefix ~= "RR_Group" or settings["RR_ShowGroupNumber"] == true) and (prefix ~= "Raid_Roll_Rank_String" or settings["RR_Show_Ranks"] == true) then
+					row:Show()
+				else
+					row:Hide()
+				end
+			end
 		end
-		
-		if RR_RollCheckBox_ShowGroupNumber_panel:GetChecked() then
-			--RR_RollFrame:SetWidth(215+RaidRoll_DBPC[UnitName("player")]["RR_ExtraWidth"])
-		else
-			RR_RollFrame:SetWidth(RR_RollFrame:GetWidth() - 30)
-		end	
+	end
+	
+	-- Use the same saved settings for column positions, visibility and frame width.
+	-- Checkbox state can still be unset while the character's UI is loading.
+	local showRanks = settings["RR_Show_Ranks"] == true
+	local showGroups = settings["RR_ShowGroupNumber"] == true
+	if showRanks then Raid_Roll_Rank_String0:Show() else Raid_Roll_Rank_String0:Hide() end
+	if showGroups then RR_Group0:Show() else RR_Group0:Hide() end
+	local extraWidth = math.max(0, tonumber(settings["RR_ExtraWidth"]) or 0)
+	local rollX = (showRanks and 170 or 120) + extraWidth
+	local columnWidth = RR_Rolled:GetStringWidth()
+	local groupWidth = RR_Group0:GetStringWidth()
+	for i=1,visibleRows do
+		columnWidth = math.max(columnWidth, _G["RR_Rolled"..i]:GetStringWidth())
+		groupWidth = math.max(groupWidth, _G["RR_Group"..i]:GetStringWidth())
+	end
+	columnWidth = math.max(50, columnWidth + 10)
+	RR_Rolled:ClearAllPoints()
+	RR_Rolled:SetPoint("TOPLEFT", RR_RollFrame, "TOPLEFT", rollX, -30)
+	RR_Group0:ClearAllPoints()
+	RR_Group0:SetPoint("TOPLEFT", RR_Rolled, "TOPLEFT", columnWidth, 0)
+	local rightMargin = showGroups and (math.max(25, groupWidth) + 20) or 15
+	RR_RollFrame:SetWidth(rollX + columnWidth + rightMargin)
+	if RR_RollModeButton then
+		RR_RollModeButton:SetText(settings["RR_EPGP_Enabled"] == true and "by PR" or "by Roll")
+		Raid_Roll_Name:SetWidth(math.min(150, RR_RollFrame:GetWidth() - 100))
 	end
 end
 
@@ -61,6 +93,15 @@ function RR_ExtraFrame_Options()
 	Raid_Roll_Name_String:SetJustifyH("LEFT")
 	
 	Raid_Roll_Name_String:SetText("Musou's Raid Roller")
+
+	RR_RollModeButton = CreateFrame("Button", "RR_RollModeButton", RR_RollFrame, "UIPanelButtonTemplate")
+	RR_RollModeButton:SetWidth(48)
+	RR_RollModeButton:SetHeight(18)
+	RR_RollModeButton:SetPoint("TOPRIGHT", RR_RollFrame, "TOPRIGHT", -30, -6)
+	RR_RollModeButton:SetText(RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Enabled"] == true and "EPGP" or "Roll")
+	RR_RollModeButton:SetScript("OnClick", RR_ToggleRollMode)
+	RR_RollModeButton:SetScript("OnEnter", function(self) RR_MouseOverTooltip(self:GetName()) end)
+	RR_RollModeButton:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 
 --------------------------------------------------------------
@@ -150,8 +191,17 @@ function RR_ExtraFrame_Options()
 
 	
 	
--- Create 5 buttons to mark up names
-	for i=1,5 do
+-- Extend the XML columns with five more rows.
+	for _, prefix in ipairs({"RR_RollerPos", "RR_Roller", "RR_Rolled", "RR_Group"}) do
+		for i=6,10 do
+			local row = RR_RollFrame:CreateFontString(prefix..i, "ARTWORK", "GameFontNormal")
+			row:SetPoint("TOPLEFT", _G[prefix..(i-1)], "BOTTOMLEFT")
+			row:SetText("")
+		end
+	end
+
+-- Create buttons to mark up names.
+	for i=1,10 do
 		Raid_Roll_SetSymbol=CreateFrame("Button","Raid_Roll_SetSymbol"..i,RR_RollFrame, "UIPanelButtonTemplate")
 		Raid_Roll_SetSymbol:RegisterForClicks("LeftButtonUp","RightButtonUp")
 		Raid_Roll_SetSymbol:SetNormalTexture( "" )
@@ -160,7 +210,7 @@ function RR_ExtraFrame_Options()
 		Raid_Roll_SetSymbol:SetHeight(12);
 		Raid_Roll_SetSymbol:SetPoint("TOPLEFT", _G["RR_RollFrame"], "TOPLEFT",30,-42-(12*(i-1)))
 		Raid_Roll_SetSymbol:SetScript("OnClick", function(self,button )
-													ID = tonumber(string.sub(self:GetName(),string.len(self:GetName())))
+													ID = tonumber(string.match(self:GetName(), "%d+$"))
 													--ID = ID + RaidRoll_Slider:GetValue() - 1
 													if RaidRoll_DB["debug"] == true then
 														RR_Test(self:GetName())
@@ -180,7 +230,7 @@ function RR_ExtraFrame_Options()
 	
 	
 
--- Create 5 strings and a header for the guild ranks
+-- Create strings and a header for the guild ranks.
 	Raid_Roll_Rank=CreateFrame("FRAME","Raid_Roll_Rank",RR_RollFrame);
 	Raid_Roll_Rank:SetWidth(70); 
 	Raid_Roll_Rank:SetHeight(15);
@@ -192,7 +242,7 @@ function RR_ExtraFrame_Options()
 	
 	Raid_Roll_Rank_String:SetText("Rank")
 	
-	for i=1,5 do
+	for i=1,10 do
 		Raid_Roll_Rank_String_i = Raid_Roll_Rank:CreateFontString("Raid_Roll_Rank_String"..i ,"ARTWORK","GameFontNormal");
 		Raid_Roll_Rank_String_i:SetPoint("TOPLEFT",_G["Raid_Roll_Rank_String"..i-1],0, -12);
 		Raid_Roll_Rank_String_i:SetJustifyH("LEFT")
@@ -458,7 +508,7 @@ function RR_ExtraFrame_Options()
 						
 						RR_NewRoll()
 						
-						for i=1,5 do
+						for i=1,10 do
 							_G["RR_Roller"..i]:SetText("")
 							_G["RR_Rolled"..i]:SetText("")
 							_G["Raid_Roll_Rank_String"..i]:SetText("")
