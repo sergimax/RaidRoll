@@ -1,0 +1,73 @@
+name: Release addon
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing version tag (for example, v1.0.0-c)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ format('refs/tags/{0}', inputs.tag || github.ref_name) }}
+          persist-credentials: false
+      - name: Validate version and package the three addon folders
+        shell: python
+        run: |
+          import os
+          import re
+          import subprocess
+          from pathlib import Path
+
+          tag = os.environ["RELEASE_TAG"]
+          output = Path(os.environ["RUNNER_TEMP"])
+          toc = Path("RaidRoll/RaidRoll.toc").read_text(encoding="utf-8-sig")
+          versions = re.findall(r"^## Version:[ \t]*(\S+)[ \t]*$", toc, re.MULTILINE)
+          if not re.fullmatch(r"v[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?", tag) or versions != [tag]:
+              raise SystemExit(f"Release tag {tag!r} does not match a valid TOC version ({versions}).")
+
+          changelog = Path("RaidRoll/CHANGELOG.md").read_text(encoding="utf-8-sig")
+          for section in re.split(r"^## ", changelog, flags=re.MULTILINE)[1:]:
+              heading, _, notes = section.partition("\n")
+              if heading.split(maxsplit=1)[:1] == [tag] and notes.strip():
+                  (output / "release-notes.md").write_text(notes.strip() + "\n", encoding="utf-8")
+                  break
+          else:
+              raise SystemExit(f"No changelog entry for {tag}.")
+
+          archive = output / f"RaidRoll-{tag}.zip"
+          subprocess.run([
+              "git", "archive", "--format=zip", f"--output={archive}",
+              "HEAD", "RaidRoll", "RaidRoll_EPGP", "RaidRoll_LootTracker",
+          ], check=True)
+      - name: Publish release and installable ZIP
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          archive="$RUNNER_TEMP/RaidRoll-$RELEASE_TAG.zip"
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "$archive" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$RELEASE_TAG" "$archive" --verify-tag \
+              --title "Raid Roll $RELEASE_TAG" --notes-file "$RUNNER_TEMP/release-notes.md" \
+              --repo "$GITHUB_REPOSITORY"
+          fi
