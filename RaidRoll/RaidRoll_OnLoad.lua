@@ -2,6 +2,14 @@
 
 
 
+function RR_GetVersionedTitle()
+	local version = GetAddOnMetadata("RaidRoll", "Version")
+	if version and version ~= "" then
+		return "Raid Roll " .. version
+	end
+	return "Raid Roll"
+end
+
 function RR_LootSettings_Setup()
 
 

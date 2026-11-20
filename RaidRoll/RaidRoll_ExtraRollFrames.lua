@@ -43,11 +43,13 @@ function RR_RollFrame_SortOutSize()
 	RR_Group0:ClearAllPoints()
 	RR_Group0:SetPoint("TOPLEFT", RR_Rolled, "TOPLEFT", columnWidth, 0)
 	local rightMargin = showGroups and (math.max(25, groupWidth) + 20) or 15
-	RR_RollFrame:SetWidth(rollX + columnWidth + rightMargin)
+	local frameWidth = rollX + columnWidth + rightMargin
 	if RR_RollModeButton then
 		RR_RollModeButton:SetText(settings["RR_EPGP_Enabled"] == true and "by PR" or "by Roll")
-		Raid_Roll_Name:SetWidth(math.min(150, RR_RollFrame:GetWidth() - 100))
+		-- Leave room for the title's left inset and the controls on the right.
+		frameWidth = math.max(frameWidth, Raid_Roll_Name:GetWidth() + 100)
 	end
+	RR_RollFrame:SetWidth(frameWidth)
 end
 
 local function RR_CreateQuickAction(name, label, width, point, x, message, shouldRoll)
@@ -98,15 +100,15 @@ function RR_ExtraFrame_Options()
 
 
 	Raid_Roll_Name=CreateFrame("FRAME","Raid_Roll_Name",RR_RollFrame);
-	Raid_Roll_Name:SetWidth(150); 
 	Raid_Roll_Name:SetHeight(20);
 	Raid_Roll_Name:SetPoint("TOPLEFT",RR_RollFrame,10, -5);
 	
 	Raid_Roll_Name_String = Raid_Roll_Name:CreateFontString("Raid_Roll_Name_String" ,"ARTWORK","GameFontNormal");
-	Raid_Roll_Name_String:SetAllPoints();
+	Raid_Roll_Name_String:SetPoint("LEFT", Raid_Roll_Name, "LEFT")
 	Raid_Roll_Name_String:SetJustifyH("LEFT")
 	
-	Raid_Roll_Name_String:SetText("Raid Roller")
+	Raid_Roll_Name_String:SetText(RR_GetVersionedTitle())
+	Raid_Roll_Name:SetWidth(math.ceil(Raid_Roll_Name_String:GetStringWidth()))
 
 	RR_RollModeButton = CreateFrame("Button", "RR_RollModeButton", RR_RollFrame, "UIPanelButtonTemplate")
 	RR_RollModeButton:SetWidth(48)

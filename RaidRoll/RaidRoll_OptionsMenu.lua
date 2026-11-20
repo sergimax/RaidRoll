@@ -78,7 +78,7 @@ function Setup_RR_Panel()
 	Raid_Roll_PanelName_String:SetPoint("TopLeft", optionsContent, "TopLeft", 20, -10)
 	Raid_Roll_PanelName_String:SetJustifyH("LEFT")
 	
-	Raid_Roll_PanelName_String:SetText("|cFFC41F3B" .. RAIDROLL_LOCALE["OPTIONSTITLE"])
+	Raid_Roll_PanelName_String:SetText("|cFFC41F3B" .. RR_GetVersionedTitle())
 	if (GetLocale() ~= "zhTW") then
 		Raid_Roll_PanelName_String:SetFont("Fonts\\FRIZQT__.TTF", 16)
 	end
