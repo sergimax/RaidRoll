@@ -1298,7 +1298,7 @@ local MaxPlayersValue = MaxPlayers[rr_rollID] and math.max(5, MaxPlayers[rr_roll
 			RR_RollData[rr_rollID][MaxPlayersValue]["EPGPValues"] = "EP: "..EP.." GP: "..GP
 			
 			local settings = RaidRoll_DBPC[UnitName("player")]
-			if PlayerName ~= "" and RR_EPGPHasLoaded and (settings["RR_EPGP_Enabled"] == true or settings["RR_AnnouncePRAlways"] == true) then
+			if PlayerName ~= "" and RR_EPGPHasLoaded and settings["RR_AnnouncePRAlways"] == true then
 				local message = PlayerName .. " has Prio: " .. PR
 				if GetNumRaidMembers() > 0 then
 					SendChatMessage(message, "RAID")
