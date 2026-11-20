@@ -991,6 +991,7 @@ function RaidRoll_CheckButton_Update_Panel()
 
 	RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"] = RR_RollCheckBox_Show_Roll_EPGP:GetChecked() and true or false
 	RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] = RR_RollCheckBox_AnnouncePRAlways:GetChecked() and true or false
+	RR_RollCheckBox_QuickAnnouncePR:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] == true)
 	RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] = RR_RollCheckBox_ShowTenPlayers:GetChecked() and true or false
 	RR_RollFrame_SortOutSize()
 	
