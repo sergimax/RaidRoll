@@ -956,13 +956,7 @@ function RaidRoll_CheckButton_Update_Panel()
 	end
 	
 	
-	if RR_RollCheckBox_EPGPMode_panel:GetChecked() then
-		RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Enabled"] =  true
-		RR_RollCheckBox_EPGPMode_panel:SetChecked(true)
-	else
-		RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Enabled"] =  false
-		RR_RollCheckBox_EPGPMode_panel:SetChecked(false)
-	end
+	RR_SetRollMode(RR_RollCheckBox_EPGPMode_panel:GetChecked() and true or false)
 	
 	if RR_RollCheckBox_EPGPThreshold_panel:GetChecked() then
 		RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Priority"] =  true

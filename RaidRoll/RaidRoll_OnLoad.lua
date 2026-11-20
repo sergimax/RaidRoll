@@ -1050,10 +1050,20 @@ end
 -- rr_AddedPlayer = if we added a player this is true, otherwise it is false (for re-sorting)
 
 
+function RR_SetRollMode(enabled)
+	local settings = RaidRoll_DBPC[UnitName("player")]
+	-- Enable main-character PR on activation, while allowing a manual override afterwards.
+	if enabled and not settings["RR_EPGP_Enabled"] then
+		settings["RR_RollCheckBox_Enable_Alt_Mode"] = true
+		RR_RollCheckBox_Enable_Alt_Mode:SetChecked(true)
+	end
+	settings["RR_EPGP_Enabled"] = enabled
+	RR_RollCheckBox_EPGPMode_panel:SetChecked(enabled)
+end
+
 function RR_ToggleRollMode()
 	local settings = RaidRoll_DBPC[UnitName("player")]
-	settings["RR_EPGP_Enabled"] = not settings["RR_EPGP_Enabled"]
-	RR_RollCheckBox_EPGPMode_panel:SetChecked(settings["RR_EPGP_Enabled"])
+	RR_SetRollMode(not settings["RR_EPGP_Enabled"])
 	RR_ScrollOffset = 0
 	for rollID in pairs(MaxPlayers) do
 		rr_RollSort(rollID)
