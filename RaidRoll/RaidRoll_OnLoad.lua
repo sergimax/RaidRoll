@@ -1718,7 +1718,9 @@ end
 -- Display settings are independent of the mode used to sort and choose a winner.
 function RR_GetRollColumnHeader()
 	local settings = RaidRoll_DBPC[UnitName("player")]
-	if settings["RR_Show_Roll_EPGP"] == true then return "PR / Roll" end
+	if settings["RR_Show_Roll_EPGP"] == true then
+		return settings["RR_EPGP_Enabled"] == true and "PR (Roll)" or "Roll (PR)"
+	end
 	return settings["RR_EPGP_Enabled"] == true and "PR" or "Roll"
 end
 
@@ -1733,7 +1735,10 @@ function RR_GetRollColumnText(rollID, index, color)
 	local prColor = RR_EPGPAboveThreshold[rollID][index] == true and "|cFFABD473" or "|cFFC41F3B"
 	local prText = prColor .. RR_EPGP_PRValue[rollID][index]
 	if settings["RR_Show_Roll_EPGP"] == true then
-		return prText .. "|r / " .. color .. rollText .. "|r"
+		if settings["RR_EPGP_Enabled"] == true then
+			return prText .. "|r (" .. color .. rollText .. "|r)"
+		end
+		return color .. rollText .. "|r (" .. prText .. "|r)"
 	end
 	if settings["RR_EPGP_Enabled"] == true then return prText end
 	return color .. rollText

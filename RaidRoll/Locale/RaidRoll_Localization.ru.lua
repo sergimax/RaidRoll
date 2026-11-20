@@ -6,7 +6,7 @@ RAIDROLL_LOCALE["Show_Ten_Players"] = "Показывать 10 игроков"
 RAIDROLL_LOCALE["RR_RollCheckBox_ShowTenPlayers"] = "Показывать 10 игроков в окне разролла.\nВыключите, чтобы показывать 5 игроков."
 
 RAIDROLL_LOCALE["Show_Roll_EPGP"] = "Показывать PR и /roll"
-RAIDROLL_LOCALE["RR_RollCheckBox_Show_Roll_EPGP"] = "Показывать PR и результат броска в режимах EPGP и Roll.\nЕсли выключено: в EPGP показывается PR, в Roll — бросок.\nНе меняет сортировку и выбор победителя."
+RAIDROLL_LOCALE["RR_RollCheckBox_Show_Roll_EPGP"] = "В режиме EPGP: PR (бросок).\nВ режиме Roll: бросок (PR).\nЕсли выключено: в EPGP показывается PR, в Roll — бросок.\nНе меняет сортировку и выбор победителя."
 
 RAIDROLL_LOCALE["10_Sec_Announce_Winner"] = "10 сек + Анонс победителя"
 RAIDROLL_LOCALE["added_to_marking_list"] = "добавлена метка в список."
