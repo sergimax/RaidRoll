@@ -1289,7 +1289,8 @@ local MaxPlayersValue = MaxPlayers[rr_rollID] and math.max(5, MaxPlayers[rr_roll
 			RR_RollData[rr_rollID][MaxPlayersValue]["LowHigh"] = LowHigh
 			RR_RollData[rr_rollID][MaxPlayersValue]["EPGPValues"] = "EP: "..EP.." GP: "..GP
 			
-			if PlayerName ~= "" and RR_EPGPHasLoaded and RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Enabled"] == true then
+			local settings = RaidRoll_DBPC[UnitName("player")]
+			if PlayerName ~= "" and RR_EPGPHasLoaded and (settings["RR_EPGP_Enabled"] == true or settings["RR_AnnouncePRAlways"] == true) then
 				local message = PlayerName .. " has Prio: " .. PR
 				if GetNumRaidMembers() > 0 then
 					SendChatMessage(message, "RAID")
@@ -2950,6 +2951,10 @@ function RR_SetupVariables()
 		RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"] = false
 	end
 	RR_RollCheckBox_Show_Roll_EPGP:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"])
+	if RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] == nil then
+		RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] = true
+	end
+	RR_RollCheckBox_AnnouncePRAlways:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] == true)
 
 	if RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] == nil then
 		RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] = true
