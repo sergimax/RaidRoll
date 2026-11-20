@@ -2,6 +2,14 @@
 
 
 
+function RR_GetVersionedTitle()
+	local version = GetAddOnMetadata("RaidRoll", "Version")
+	if version and version ~= "" then
+		return "Raid Roll " .. version
+	end
+	return "Raid Roll"
+end
+
 function RR_LootSettings_Setup()
 
 
@@ -141,7 +149,8 @@ local 	player_name,mob_name,mob_guid,numLootItems,
 			-- Start scanning for items
 				for i=1,numLootItems do
 				-- If its an item
-					if LootSlotIsItem(i) then
+					ItemLink = LootSlotIsItem(i) and GetLootSlotLink(i)
+					if ItemLink then
 						if WeHaveFoundAnItem == false then
 						-- If we are currently looking at the last window
 	--						if RaidRoll_DB["Loot"]["TOTAL WINDOWS"] == RaidRoll_DB["Loot"]["CURRENT WINDOW"] then
@@ -165,9 +174,8 @@ local 	player_name,mob_name,mob_guid,numLootItems,
 						-- Increase the count by 1 (because an item was found)
 							LootNumber = LootNumber + 1
 							
-						-- Get the ICON and ITEMLINK
+						-- Get the loot details once the item link is available.
 							local lootIcon, lootName, lootQuantity, rarity = GetLootSlotInfo(i);
-							ItemLink = GetLootSlotLink(i); 
 							
 						-- Create an array
 							if RR_Check_lootName == nil then RR_Check_lootName = {} end
@@ -508,6 +516,7 @@ function RR_ClearAllData_Startup()
   rr_playername = {}
   RollerRoll = {}
   RollerName = {}
+  RollerSoftNames = {}
   RollerGroup = {}
   MaxPlayers = {}
   RollerFirst = {}
@@ -575,15 +584,40 @@ function RR_Roll_Options_Toggle()
 		_G["RaidRoll_Catch_All"]:Hide()
 		_G["RaidRoll_Allow_All"]:Hide()
 		RR_BottomFrame:Hide()
+		RR_RollQuickActions:Show()
 	else
 		_G["RaidRoll_Catch_All"]:Show()
 		_G["RaidRoll_Allow_All"]:Show()
 		RR_BottomFrame:Show()
+		RR_RollQuickActions:Hide()
 	end
 
 
 end
 ----------------------------------------------------------------------------------------------
+
+local softMessages = {
+	["софт"] = true, ["cофт"] = true, ["сoфт"] = true, ["coфт"] = true,
+	["soft"] = true, ["cjan"] = true, ["ыщае"] = true,
+}
+
+local function RR_TrackSoftMessage(message, player)
+	if not message or not player or time() >= RR_Timestamp + 60 then return end
+	local command = strtrim(strlower(message))
+	if not softMessages[command] and command ~= "Софт" and command ~= "СОФТ" then return end
+
+	local softPlayers = RollerSoftNames[rr_rollID]
+	if not softPlayers then
+		softPlayers = {}
+		RollerSoftNames[rr_rollID] = softPlayers
+	end
+	if softPlayers[player] then return end
+	softPlayers[player] = true
+
+	if rr_rollID == rr_CurrentRollID and HasRolled[rr_rollID] and HasRolled[rr_rollID][player] then
+		RR_Display(rr_rollID)
+	end
+end
 
 function RaidRoll_Event(self, event, ...)
 	local arg1, arg2, arg3, arg4, arg5, arg6 = ...;
@@ -676,12 +710,10 @@ function RaidRoll_Event(self, event, ...)
 			
 			if RaidRoll_DB["debug"] == true then RR_Test(RR_String_minus_ILink) end	
 			
-			RR_ChatRollFound = string.find(RR_String_minus_ILink, "roll")
-			--[[
-			if RR_ChatRollFound == nil then
-				RR_ChatRollFound = string.find(RR_String_minus_ILink, RAIDROLL_LOCALE["Roll"])
-			end
-			]]
+			RR_ChatRollFound = string.find(RR_String_minus_ILink, "rol", 1, true)
+				or string.find(RR_String_minus_ILink, "рол", 1, true)
+				or string.find(RR_String_minus_ILink, "Рол", 1, true)
+				or string.find(RR_String_minus_ILink, "РОЛ", 1, true)
 			
 			-- Includes german searching for roll announcement
 			if string.find(arg1_s, "|h|r") ~= nil and string.find(RR_String_minus_ILink, "raid roll") == nil and (RR_ChatRollFound ~= nil  or event == "CHAT_MSG_RAID_WARNING") then 
@@ -769,6 +801,10 @@ function RaidRoll_Event(self, event, ...)
 		end
 	end
 	
+	if event == "CHAT_MSG_RAID" or event == "CHAT_MSG_RAID_LEADER" or event == "CHAT_MSG_RAID_WARNING" then
+		RR_TrackSoftMessage(arg1, arg2)
+	end
+
 -- Roll handler
 	if event == "CHAT_MSG_SYSTEM" then
 		if arg1 ~= nil then 
@@ -1050,10 +1086,20 @@ end
 -- rr_AddedPlayer = if we added a player this is true, otherwise it is false (for re-sorting)
 
 
+function RR_SetRollMode(enabled)
+	local settings = RaidRoll_DBPC[UnitName("player")]
+	-- Enable main-character PR on activation, while allowing a manual override afterwards.
+	if enabled and not settings["RR_EPGP_Enabled"] then
+		settings["RR_RollCheckBox_Enable_Alt_Mode"] = true
+		RR_RollCheckBox_Enable_Alt_Mode:SetChecked(true)
+	end
+	settings["RR_EPGP_Enabled"] = enabled
+	RR_RollCheckBox_EPGPMode_panel:SetChecked(enabled)
+end
+
 function RR_ToggleRollMode()
 	local settings = RaidRoll_DBPC[UnitName("player")]
-	settings["RR_EPGP_Enabled"] = not settings["RR_EPGP_Enabled"]
-	RR_RollCheckBox_EPGPMode_panel:SetChecked(settings["RR_EPGP_Enabled"])
+	RR_SetRollMode(not settings["RR_EPGP_Enabled"])
 	RR_ScrollOffset = 0
 	for rollID in pairs(MaxPlayers) do
 		rr_RollSort(rollID)
@@ -1251,18 +1297,15 @@ local MaxPlayersValue = MaxPlayers[rr_rollID] and math.max(5, MaxPlayers[rr_roll
 			RR_RollData[rr_rollID][MaxPlayersValue]["LowHigh"] = LowHigh
 			RR_RollData[rr_rollID][MaxPlayersValue]["EPGPValues"] = "EP: "..EP.." GP: "..GP
 			
-			--CODE CHANGED DRKNEZSZ
-			if RaidRoll_DBPC[UnitName("player")]["RR_EPGP_Enabled"] == true then
-				if PlayerName ~= "" then
-					local message = PlayerName.." has Prio: ".. PR;
-					if GetNumRaidMembers() ~= 0 then
-						SendChatMessage(message, "Raid"); 
-					else
-						SendChatMessage(message, "Party"); 
-					end
+			local settings = RaidRoll_DBPC[UnitName("player")]
+			if PlayerName ~= "" and RR_EPGPHasLoaded and (settings["RR_EPGP_Enabled"] == true or settings["RR_AnnouncePRAlways"] == true) then
+				local message = PlayerName .. " has Prio: " .. PR
+				if GetNumRaidMembers() > 0 then
+					SendChatMessage(message, "RAID")
+				elseif GetNumPartyMembers() > 0 then
+					SendChatMessage(message, "PARTY")
 				end
 			end
-			--END OF CODE CHANGED
 			
 		-- Default rank and rank id values (will be overwritten if the person is in the guild
 			RollerRank[rr_rollID][MaxPlayersValue] = ""
@@ -1708,7 +1751,9 @@ end
 -- Display settings are independent of the mode used to sort and choose a winner.
 function RR_GetRollColumnHeader()
 	local settings = RaidRoll_DBPC[UnitName("player")]
-	if settings["RR_Show_Roll_EPGP"] == true then return "PR / Roll" end
+	if settings["RR_Show_Roll_EPGP"] == true then
+		return settings["RR_EPGP_Enabled"] == true and "PR (Roll)" or "Roll (PR)"
+	end
 	return settings["RR_EPGP_Enabled"] == true and "PR" or "Roll"
 end
 
@@ -1719,11 +1764,16 @@ function RR_GetRollColumnText(rollID, index, color)
 	if RaidRoll_LegitRoll[rollID][index] ~= true then rollText = rollText .. "*" end
 	if RollerFirst[rollID][index] ~= true then
 		rollText = "(" .. Roll_Number[rollID][index] .. ") " .. rollText
+	elseif RollerSoftNames[rollID] and RollerSoftNames[rollID][RollerName[rollID][index]] then
+		color = "|cFF66FF66"
 	end
 	local prColor = RR_EPGPAboveThreshold[rollID][index] == true and "|cFFABD473" or "|cFFC41F3B"
 	local prText = prColor .. RR_EPGP_PRValue[rollID][index]
 	if settings["RR_Show_Roll_EPGP"] == true then
-		return prText .. "|r / " .. color .. rollText .. "|r"
+		if settings["RR_EPGP_Enabled"] == true then
+			return prText .. "|r (" .. color .. rollText .. "|r)"
+		end
+		return color .. rollText .. "|r (" .. prText .. "|r)"
 	end
 	if settings["RR_EPGP_Enabled"] == true then return prText end
 	return color .. rollText
@@ -2909,6 +2959,10 @@ function RR_SetupVariables()
 		RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"] = false
 	end
 	RR_RollCheckBox_Show_Roll_EPGP:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_Show_Roll_EPGP"])
+	if RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] == nil then
+		RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] = true
+	end
+	RR_RollCheckBox_AnnouncePRAlways:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] == true)
 
 	if RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] == nil then
 		RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] = true

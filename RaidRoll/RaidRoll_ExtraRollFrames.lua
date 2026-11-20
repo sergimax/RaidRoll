@@ -43,11 +43,27 @@ function RR_RollFrame_SortOutSize()
 	RR_Group0:ClearAllPoints()
 	RR_Group0:SetPoint("TOPLEFT", RR_Rolled, "TOPLEFT", columnWidth, 0)
 	local rightMargin = showGroups and (math.max(25, groupWidth) + 20) or 15
-	RR_RollFrame:SetWidth(rollX + columnWidth + rightMargin)
+	local frameWidth = rollX + columnWidth + rightMargin
 	if RR_RollModeButton then
 		RR_RollModeButton:SetText(settings["RR_EPGP_Enabled"] == true and "by PR" or "by Roll")
-		Raid_Roll_Name:SetWidth(math.min(150, RR_RollFrame:GetWidth() - 100))
+		-- Leave room for the title's left inset and the controls on the right.
+		frameWidth = math.max(frameWidth, Raid_Roll_Name:GetWidth() + 100)
 	end
+	RR_RollFrame:SetWidth(frameWidth)
+end
+
+local function RR_CreateQuickAction(name, label, width, point, x, message, shouldRoll)
+	local button = CreateFrame("Button", name, RR_RollQuickActions, "UIPanelButtonTemplate")
+	button:SetWidth(width)
+	button:SetHeight(22)
+	button:SetPoint(point, RR_RollQuickActions, point, x, 0)
+	button:SetText(label)
+	button:SetScript("OnClick", function()
+		SendChatMessage(message, UnitInRaid("player") and "RAID" or "SAY")
+		if shouldRoll then RandomRoll(1, 100) end
+	end)
+	button:SetScript("OnEnter", function(self) RR_MouseOverTooltip(self:GetName()) end)
+	button:SetScript("OnLeave", function() GameTooltip:Hide() end)
 end
 
 -- Setuo extra frame commands
@@ -84,15 +100,15 @@ function RR_ExtraFrame_Options()
 
 
 	Raid_Roll_Name=CreateFrame("FRAME","Raid_Roll_Name",RR_RollFrame);
-	Raid_Roll_Name:SetWidth(150); 
 	Raid_Roll_Name:SetHeight(20);
 	Raid_Roll_Name:SetPoint("TOPLEFT",RR_RollFrame,10, -5);
 	
 	Raid_Roll_Name_String = Raid_Roll_Name:CreateFontString("Raid_Roll_Name_String" ,"ARTWORK","GameFontNormal");
-	Raid_Roll_Name_String:SetAllPoints();
+	Raid_Roll_Name_String:SetPoint("LEFT", Raid_Roll_Name, "LEFT")
 	Raid_Roll_Name_String:SetJustifyH("LEFT")
 	
-	Raid_Roll_Name_String:SetText("Musou's Raid Roller")
+	Raid_Roll_Name_String:SetText(RR_GetVersionedTitle())
+	Raid_Roll_Name:SetWidth(math.ceil(Raid_Roll_Name_String:GetStringWidth()))
 
 	RR_RollModeButton = CreateFrame("Button", "RR_RollModeButton", RR_RollFrame, "UIPanelButtonTemplate")
 	RR_RollModeButton:SetWidth(48)
@@ -293,12 +309,20 @@ function RR_ExtraFrame_Options()
 	RR_Roll_RollButton:SetScript("OnEnter",function(self) RR_MouseOverTooltip(self:GetName())	end)
 	RR_Roll_RollButton:SetScript("OnLeave", function() GameTooltip:Hide()	end)
 	
--- options menu button
+	RR_RollQuickActions = CreateFrame("Frame", nil, RR_RollFrame)
+	RR_RollQuickActions:SetPoint("TOPLEFT", RR_RollFrame, "BOTTOMLEFT")
+	RR_RollQuickActions:SetPoint("TOPRIGHT", RR_RollFrame, "BOTTOMRIGHT")
+	RR_RollQuickActions:SetHeight(22)
+	RR_CreateQuickAction("RR_Roll_SoftButton", "Soft", 35, "LEFT", 0, "софт", true)
+	RR_CreateQuickAction("RR_Roll_MinusButton", "-", 22, "RIGHT", -27, "-")
+	RR_CreateQuickAction("RR_Roll_PlusButton", "+", 22, "RIGHT", 0, "+")
+
+	-- options menu button
 	RR_Roll_Options = CreateFrame("Button", "RaidRoll_OptionButton", RR_RollFrame, "UIPanelButtonTemplate")
 	RR_Roll_Options:SetWidth(18)
 	RR_Roll_Options:SetHeight(18)
 	RR_Roll_Options:SetPoint("Bottom", RR_RollFrame, "Bottom", 74, 11)
-	RR_Roll_Options:SetText("v")
+	RR_Roll_Options:SetText("V")
 	RR_Roll_Options:SetScript("OnClick",RR_Roll_Options_Toggle)
 	
 	
@@ -477,6 +501,7 @@ function RR_ExtraFrame_Options()
 						rr_CurrentRollID = 0
 						RR_DisplayID = 0
 						RollerName = {}
+						RollerSoftNames = {}
 						MaxPlayers = {}
 						rr_Item = {}
 						RR_IgnoredList = {}

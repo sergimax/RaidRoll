@@ -1,9 +1,9 @@
 ## Interface: 30300
 ## X-Compatible-With: 40000
 ## Title: Raid Roll
-## Version: v1.0.0-b
-## Author: Musou
-## Notes: Raid rolls with Normal and EPGP modes, optional PR and /roll display, and scrollable settings.
+## Version: v1.0.0-c
+## Author: Musou, sergimax
+## Notes: Raid rolls with EPGP and Roll modes, Soft rolls, quick chat buttons, and optional PR announcements.
 ## email: killerpet@gmail.com
 ## SavedVariables: RaidRoll_DB,RaidRoll_DBPC
 ## SavedVariablesPerCharacter: RR_Accept_All_Rolls,RR_Track_Unannounced_Rolls,RR_Roll_Tracking_Enabled,RR_AllowExtraRolls,RR_Show_Ranks,RR_RankPriority,RR_ExtraWidth,RR_ShowGroupNumber,RR_RollFrameHeight
