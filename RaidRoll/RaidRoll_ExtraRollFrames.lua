@@ -144,7 +144,7 @@ function RR_ExtraFrame_Options()
 
 	--RR_BottomFrame:SetFrameStrata("MEDIUM")
 	RR_BottomFrame:SetWidth(180) -- Set these to whatever height/width is needed 
-	RR_BottomFrame:SetHeight(100) -- for your Texture
+	RR_BottomFrame:SetHeight(115) -- for your Texture
 	RR_BottomFrame:SetPoint("Top",RR_RollFrame,"Bottom",0,6);
 
 	RR_BottomFrame:EnableMouse(true)
@@ -292,11 +292,11 @@ function RR_ExtraFrame_Options()
 	_G["RR_Next"]:SetText(">>>")
 	
 	_G["RaidRoll_Catch_All"]:ClearAllPoints()
-	_G["RaidRoll_Catch_All"]:SetPoint("BottomLeft", RR_BottomFrame, "BottomLeft",10,75)
+	_G["RaidRoll_Catch_All"]:SetPoint("BottomLeft", RR_BottomFrame, "BottomLeft",10,90)
 	_G["RaidRoll_Catch_All".."Text"]:SetText(RAIDROLL_LOCALE["Catch_Unannounced_Rolls"])
 
 	_G["RaidRoll_Allow_All"]:ClearAllPoints()
-	_G["RaidRoll_Allow_All"]:SetPoint("BottomLeft", RR_BottomFrame, "BottomLeft",10,60)
+	_G["RaidRoll_Allow_All"]:SetPoint("BottomLeft", RR_BottomFrame, "BottomLeft",10,75)
 	_G["RaidRoll_Allow_All".."Text"]:SetText(RAIDROLL_LOCALE["Allow_all_rolls"])
 
 -- roll button
@@ -427,9 +427,22 @@ function RR_ExtraFrame_Options()
 	RR_RollCheckBox_ExtraRolls = CreateFrame("CheckButton", "RaidRollCheckBox_ExtraRolls", RR_BottomFrame, "UICheckButtonTemplate")
 	RR_RollCheckBox_ExtraRolls:SetWidth(20)
 	RR_RollCheckBox_ExtraRolls:SetHeight(20)
-	RR_RollCheckBox_ExtraRolls:SetPoint("BottomLeft", RR_BottomFrame, "BottomLeft", 10, 45)
+	RR_RollCheckBox_ExtraRolls:SetPoint("BottomLeft", RR_BottomFrame, "BottomLeft", 10, 60)
 	_G["RaidRollCheckBox_ExtraRolls".."Text"]:SetText(RAIDROLL_LOCALE["Allow_Extra_Rolls"])
 	RR_RollCheckBox_ExtraRolls:SetScript("OnClick",RaidRoll_CheckButton_Update)
+
+	RR_RollCheckBox_QuickAnnouncePR = CreateFrame("CheckButton", "RR_RollCheckBox_QuickAnnouncePR", RR_BottomFrame, "UICheckButtonTemplate")
+	RR_RollCheckBox_QuickAnnouncePR:SetWidth(20)
+	RR_RollCheckBox_QuickAnnouncePR:SetHeight(20)
+	RR_RollCheckBox_QuickAnnouncePR:SetPoint("BottomLeft", RR_BottomFrame, "BottomLeft", 10, 45)
+	_G["RR_RollCheckBox_QuickAnnouncePRText"]:SetText(RAIDROLL_LOCALE["Announce_PR_Always"])
+	RR_RollCheckBox_QuickAnnouncePR:SetScript("OnClick", function(self)
+		local checked = self:GetChecked() and true or false
+		RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] = checked
+		RR_RollCheckBox_AnnouncePRAlways:SetChecked(checked)
+	end)
+	RR_RollCheckBox_QuickAnnouncePR:SetScript("OnEnter", function() RR_MouseOverTooltip("RR_RollCheckBox_AnnouncePRAlways") end)
+	RR_RollCheckBox_QuickAnnouncePR:SetScript("OnLeave", function() GameTooltip:Hide() end)
 
 --[[
 	RR_RollCheckBox_ShowRanks = CreateFrame("CheckButton", "RaidRollCheckBox_ShowRanks", RR_BottomFrame, "UICheckButtonTemplate")

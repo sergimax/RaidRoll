@@ -2963,6 +2963,7 @@ function RR_SetupVariables()
 		RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] = true
 	end
 	RR_RollCheckBox_AnnouncePRAlways:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] == true)
+	RR_RollCheckBox_QuickAnnouncePR:SetChecked(RaidRoll_DBPC[UnitName("player")]["RR_AnnouncePRAlways"] == true)
 
 	if RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] == nil then
 		RaidRoll_DBPC[UnitName("player")]["RR_ShowTenPlayers"] = true
