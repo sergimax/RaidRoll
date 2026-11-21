@@ -1,7 +1,7 @@
 ## Interface: 30300
 ## X-Compatible-With: 40000
 ## Title: Raid Roll
-## Version: v1.0.1
+## Version: v1.0.2
 ## Author: Musou, sergimax
 ## Notes: Raid rolls with EPGP and Roll modes, Soft rolls, quick chat buttons, and optional PR announcements.
 ## email: killerpet@gmail.com

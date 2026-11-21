@@ -4,7 +4,7 @@ Raid Roll отслеживает броски `/roll` и помогает раз
 Автор исходного аддона — `Musou`.
 Доработки этой версии — `sergimax`.
 
-![Addon version](https://img.shields.io/badge/Addon_version-v1.0.1-purple)
+![Addon version](https://img.shields.io/badge/Addon_version-v1.0.2-purple)
 ![Game version](https://img.shields.io/badge/WoW-3.3.5a-brown)
 
 Её изменения перечислены в [ченджлоге](RaidRoll/CHANGELOG.md).
