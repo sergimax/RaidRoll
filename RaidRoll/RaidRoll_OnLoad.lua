@@ -672,8 +672,6 @@ function RaidRoll_Event(self, event, ...)
 	end
 
 	if event == "CHAT_MSG_PARTY" or event == "CHAT_MSG_PARTY_LEADER" or event == "CHAT_MSG_RAID" or event == "CHAT_MSG_RAID_LEADER" or event == "CHAT_MSG_RAID_WARNING" or event == "CHAT_MSG_SAY" then
-		arg1_s = string.lower(arg1)
-		
 		if string.find(arg1,RAIDROLL_LOCALE["Rolling_Ends_in_10_Sec"]) then
 			RR_FinishRolling(true,10)
 		end
@@ -682,41 +680,24 @@ function RaidRoll_Event(self, event, ...)
 			RR_HasAnnounced_10_Sec = true
 			RR_FinishRolling(true,5)
 		end
-		
-		if string.find(arg1_s, "item:") then
-			
-		--Find the start and end location of the item link
-			xRR_Start_Loc,_ = string.find(arg1_s, "item:");
-			_,xRR_End_Loc = string.find(arg1_s, "|h|r")
-			
-			if xRR_Start_Loc == nil then xRR_Start_Loc = 0 end
-			if xRR_End_Loc == nil then xRR_End_Loc = 0 end
-			
-			
-		--Get the words before and after the item link
-			RR_String_minus_ILink1 = strsub(arg1,0,xRR_Start_Loc-12)
-			RR_String_minus_ILink2 = strsub(arg1,xRR_End_Loc,strlen(arg1))
-			
-		--If they are nil set them to blank values
-			if RR_String_minus_ILink1 == nil then RR_String_minus_ILink1 = "" end
-			if RR_String_minus_ILink2 == nil then RR_String_minus_ILink2 = "" end
+	end
 
-		--Put them together
-			RR_String_minus_ILink = RR_String_minus_ILink1 .. RR_String_minus_ILink2
-			
-			
-		-- use lower case characters
-			RR_String_minus_ILink = string.lower(RR_String_minus_ILink)
-			
-			if RaidRoll_DB["debug"] == true then RR_Test(RR_String_minus_ILink) end	
-			
-			RR_ChatRollFound = string.find(RR_String_minus_ILink, "rol", 1, true)
-				or string.find(RR_String_minus_ILink, "рол", 1, true)
-				or string.find(RR_String_minus_ILink, "Рол", 1, true)
-				or string.find(RR_String_minus_ILink, "РОЛ", 1, true)
-			
-			-- Includes german searching for roll announcement
-			if string.find(arg1_s, "|h|r") ~= nil and string.find(RR_String_minus_ILink, "raid roll") == nil and (RR_ChatRollFound ~= nil  or event == "CHAT_MSG_RAID_WARNING") then 
+	local isRaidMessage = event == "CHAT_MSG_RAID" or event == "CHAT_MSG_RAID_LEADER"
+	if (isRaidMessage or event == "CHAT_MSG_RAID_WARNING") and arg1 then
+		local linkPattern = "|c%x%x%x%x%x%x%x%x|Hitem:[^|]+|h.-|h|r"
+		local itemLink = string.match(arg1, linkPattern)
+		if itemLink then
+			local announcement = string.lower((string.gsub(arg1, linkPattern, " ")))
+			announcement = string.gsub(announcement, "Р", "р")
+			announcement = string.gsub(announcement, "О", "о")
+			announcement = string.gsub(announcement, "Л", "л")
+			local wordBoundary = "%f[%w_\128-\255]"
+			local wordEnd = "%f[^%w_\128-\255]"
+			local hasRoll = string.find(announcement, wordBoundary .. "roll" .. wordEnd)
+				or string.find(announcement, wordBoundary .. "ролл" .. wordEnd)
+
+			local raidRollPrefix = "<<" .. RAIDROLL_LOCALE["Raid_Rolling_for"]
+			if string.sub(arg1, 1, #raidRollPrefix) ~= raidRollPrefix and (hasRoll or event == "CHAT_MSG_RAID_WARNING") then
 				if RaidRoll_DB["debug"] == true then RR_Test("Rolling on an item detected") end
 				
 				if IsInGuild() then GuildRoster() end
@@ -731,13 +712,8 @@ function RaidRoll_Event(self, event, ...)
 				RR_Doing_a_New_Roll = false
 				
 				
-			--Cut the itemlink out of the string
-				if xRR_Start_Loc ~= nil and xRR_End_Loc ~= nil then
-					xRR_ItemLink = strsub(arg1,xRR_Start_Loc-12,xRR_End_Loc)
-				end
-			--For debugging, show the itemlink
-				if RaidRoll_DB["debug"] == true then RR_Test(xRR_ItemLink) end
-				
+				if RaidRoll_DB["debug"] == true then RR_Test(itemLink) end
+
 				if rr_Item[rr_rollID] ~= "ID #"..rr_rollID or RollerName[rr_rollID][1] ~= "" then
 				
 					rr_rollID = rr_rollID + 1	
@@ -748,13 +724,13 @@ function RaidRoll_Event(self, event, ...)
 					end
 				end
 				
-				rr_Item[rr_rollID] = xRR_ItemLink
+				rr_Item[rr_rollID] = itemLink
+				RR_Rolling_on_item = true
 				rr_RollSort(rr_rollID,0,"",true)
 				
 				if RaidRoll_DB["debug"] == true then RR_Test("New item roll found, ID#" .. rr_rollID) end
 			end
 			
-			RR_Rolling_on_item = true
 			
 		end
 	end
